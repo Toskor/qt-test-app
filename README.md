@@ -4,6 +4,59 @@
 
 ## Сборка проекта
 
+### Кросс-компиляция для Windows на macOS через Docker
+
+Этот проект поддерживает кросс-компиляцию для Windows на macOS с использованием Docker и MXE (M cross environment).
+
+#### Требования для Docker сборки
+
+- Docker Desktop для macOS
+- Docker Compose (обычно входит в Docker Desktop)
+
+#### Быстрая сборка
+
+Просто запустите скрипт сборки:
+
+```bash
+./build-windows.sh Release
+```
+
+или для Debug версии:
+
+```bash
+./build-windows.sh Debug
+```
+
+После завершения сборки все файлы (.exe и .dll) будут находиться в папке `build-windows/deploy/`.
+
+#### Ручная сборка через Docker Compose
+
+```bash
+# Сборка образа (только первый раз или после изменений Dockerfile)
+docker-compose build
+
+# Запуск сборки
+docker-compose run --rm builder
+```
+
+#### Что происходит при сборке
+
+1. Docker образ собирается на основе MXE (M cross environment)
+2. Устанавливаются необходимые компоненты Qt6 через MXE
+3. Проект компилируется с использованием кросс-компилятора MinGW
+4. Автоматически выполняется `windeployqt` для копирования всех необходимых DLL
+
+#### Структура файлов для Docker
+
+- `Dockerfile` - определение Docker образа с MXE и Qt6
+- `docker-compose.yml` - конфигурация для удобной сборки
+- `build-windows.sh` - скрипт автоматизации сборки
+- `.dockerignore` - файлы, исключаемые из Docker контекста
+
+---
+
+## Локальная сборка на Windows
+
 ### Требования
 
 - Qt 6.9.2 (или выше)

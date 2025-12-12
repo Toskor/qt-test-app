@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+  builder:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      # Mount source code
+      - .:/workspace
+      # Use named volume for build artifacts to persist between runs
+      - build-cache:/workspace/build-windows
+    working_dir: /workspace
+    # Keep container running for interactive use
+    stdin_open: true
+    tty: true
+
+volumes:
+  build-cache:
