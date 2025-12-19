@@ -21,7 +21,16 @@
 
 ### Шаг 2: Первая сборка
 
-При первой сборке Docker образ будет собираться долго (30-60 минут), так как MXE компилирует Qt6 из исходников. Это происходит только один раз.
+При первой сборке Docker образ будет собираться долго (1-2 часа), так как MXE компилирует кросс-компилятор и Qt6 из исходников. Это происходит только один раз.
+
+**Важно:** Сборка MXE разбита на отдельные шаги в Dockerfile:
+1. Клонирование MXE (быстро)
+2. Настройка конфигурации (быстро)
+3. Сборка базового toolchain (gcc, binutils) - 30-60 минут
+4. Сборка Qt6 base - 30-60 минут
+5. Сборка Qt6 tools - 10-30 минут
+
+Каждый шаг кэшируется в отдельном слое Docker образа. Если сборка прервется на каком-то шаге, при следующей попытке Docker использует кэшированные слои до места ошибки, и пересоберет только то, что нужно.
 
 ```bash
 ./build-windows.sh Release
@@ -29,7 +38,9 @@
 
 ### Шаг 3: Последующие сборки
 
-После первой сборки образ будет кэширован, и последующие сборки будут выполняться намного быстрее (несколько минут).
+После первой успешной сборки все слои образа будут закэшированы. При пересборке образа (например, после изменения Dockerfile) Docker будет использовать кэшированные слои до измененного места, что значительно ускоряет процесс.
+
+Если сборка вашего приложения завершится с ошибкой, образ останется неизменным, и при следующем запуске не потребуется пересборка MXE.
 
 ## Структура файлов
 
@@ -44,22 +55,22 @@
 
 ```bash
 # Сборка образа
-docker-compose build
+docker compose build
 
 # Запуск интерактивной сессии
-docker-compose run --rm builder
+docker compose run --rm builder
 
 # Внутри контейнера:
 cmake -B build-windows \
     -G 'Unix Makefiles' \
     -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_TOOLCHAIN_FILE=/usr/lib/mxe/usr/x86_64-w64-mingw32.static/share/cmake/mxe-conf.cmake \
-    -DCMAKE_PREFIX_PATH=/usr/lib/mxe/usr/x86_64-w64-mingw32.static/qt6
+    -DCMAKE_TOOLCHAIN_FILE=/opt/mxe/usr/x86_64-w64-mingw32.static/share/cmake/mxe-conf.cmake \
+    -DCMAKE_PREFIX_PATH=/opt/mxe/usr/x86_64-w64-mingw32.static/qt6
 
 cmake --build build-windows
 
 # Развертывание DLL
-/usr/lib/mxe/usr/x86_64-w64-mingw32.static/qt6/bin/windeployqt.exe \
+/opt/mxe/usr/x86_64-w64-mingw32.static/qt6/bin/windeployqt.exe \
     --compiler-runtime \
     --release \
     --dir build-windows/deploy \
@@ -74,14 +85,17 @@ cmake --build build-windows
 
 ### Проблема: Ошибка при компиляции Qt6 в MXE
 
-**Решение:** Это может занять очень много времени. Убедитесь, что у вас достаточно места на диске (минимум 10GB свободного места).
+**Решение:** 
+- Убедитесь, что у вас достаточно места на диске (минимум 15GB свободного места для сборки MXE)
+- Если сборка прервалась на этапе сборки MXE, при следующей попытке Docker автоматически использует кэшированные слои до места ошибки
+- Каждый шаг сборки MXE (gcc/binutils, qt6-qtbase, qt6-qttools) кэшируется отдельно, поэтому пересборка будет быстрее
 
 ### Проблема: windeployqt не найден
 
 **Решение:** Проверьте, что Qt6 установлен в MXE:
 
 ```bash
-docker-compose run --rm builder ls -la /usr/lib/mxe/usr/x86_64-w64-mingw32.static/qt6/bin/
+docker compose run --rm builder ls -la /opt/mxe/usr/x86_64-w64-mingw32.static/qt6/bin/
 ```
 
 ### Проблема: Исполняемый файл не запускается на Windows

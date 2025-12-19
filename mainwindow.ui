@@ -31,7 +31,7 @@
     <item>
      <widget class="QPushButton" name="exitButton">
       <property name="text">
-       <string>Exit</string>
+       <string>Exit second </string>
       </property>
      </widget>
     </item>

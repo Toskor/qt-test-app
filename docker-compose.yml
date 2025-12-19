@@ -1,19 +1,19 @@
-version: "3.8"
-
 services:
   builder:
+    platform: linux/amd64
     build:
       context: .
       dockerfile: Dockerfile
     volumes:
-      # Mount source code
+      # Mount source code and build directory
+      # Build artifacts will be accessible on the host
       - .:/workspace
-      # Use named volume for build artifacts to persist between runs
-      - build-cache:/workspace/build-windows
+      # Note: MXE is now built into the Docker image layers, so no volume needed
+      # Each build step is cached in a separate Docker layer
+      # We use bind mount for build-windows so files are accessible on host
     working_dir: /workspace
     # Keep container running for interactive use
     stdin_open: true
     tty: true
 
-volumes:
-  build-cache:
+# No named volumes needed - using bind mounts for build artifacts

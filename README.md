@@ -33,10 +33,10 @@
 
 ```bash
 # Сборка образа (только первый раз или после изменений Dockerfile)
-docker-compose build
+docker compose build
 
 # Запуск сборки
-docker-compose run --rm builder
+docker compose run --rm builder
 ```
 
 #### Что происходит при сборке

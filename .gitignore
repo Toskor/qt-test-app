@@ -83,3 +83,6 @@ CMakeLists.txt.user*
 
 # Docker build artifacts
 build-windows/
+.cursor/mxe-build-tail.log
+.gitignore
+.cursor/mxe-build-last.log
